@@ -10,7 +10,7 @@ def main():
     overlap (which you shouldn't have if it was caused by a changing hostname).
 
     Useful to fix duplicate buckets caused by a changing hostname, as in this issue:
-      https://github.com/ActivityWatch/activitywatch/issues/454
+      https://github.com/KomuTracker/komutracker/issues/454
     """
 
     # You need to set testing=False if you're going to run this on your normal instance

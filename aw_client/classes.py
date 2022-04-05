@@ -19,8 +19,8 @@ default_classes: List[Tuple[CategoryId, CategorySpec]] = [
         },
     ),
     (
-        ["Work", "Programming", "ActivityWatch"],
-        {"type": "regex", "regex": "ActivityWatch|aw-", "ignore_case": True},
+        ["Work", "Programming", "KomuTracker"],
+        {"type": "regex", "regex": "KomuTracker|aw-", "ignore_case": True},
     ),
     (["Work", "Image"], {"type": "regex", "regex": "Gimp|Inkscape"}),
     (["Work", "Video"], {"type": "regex", "regex": "Kdenlive"}),

@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "aw-client"
 version = "0.5.9"
-description = "Client library for ActivityWatch"
+description = "Client library for KomuTracker"
 authors = ["Erik Bjäreholt <erik@bjareho.lt>", "Johan Bjäreholt <johan@bjareho.lt>"]
 license = "MPL-2.0"
 readme = "README.md"
-homepage = "https://activitywatch.net/"
-repository = "https://github.com/ActivityWatch/aw-client/"
-documentation = "https://docs.activitywatch.net/"
+homepage = "https://komutracker.net/"
+repository = "https://github.com/KomuTracker/aw-client/"
+documentation = "https://docs.komutracker.net/"
 packages = [
     { include = "aw_client" },
 ]

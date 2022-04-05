@@ -30,7 +30,7 @@ def get_events():
     categories = [
         (
             ["Work"],
-            {"type": "regex", "regex": "aw-|activitywatch", "ignore_case": True},
+            {"type": "regex", "regex": "aw-|komutracker", "ignore_case": True},
         ),
     ]
 

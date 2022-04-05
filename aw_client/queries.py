@@ -1,7 +1,7 @@
 """
 Common queries.
 
-Most of these are from: https://github.com/ActivityWatch/aw-webui/blob/master/src/queries.ts
+Most of these are from: https://github.com/KomuTracker/aw-webui/blob/master/src/queries.ts
 """
 
 import json

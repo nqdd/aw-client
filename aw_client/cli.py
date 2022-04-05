@@ -37,7 +37,7 @@ class _Context:
 
 
 @click.group(
-    help="CLI utility for aw-client to aid in interacting with the ActivityWatch server"
+    help="CLI utility for aw-client to aid in interacting with the KomuTracker server"
 )
 @click.option(
     "--host",

@@ -18,7 +18,7 @@ from aw_core import Event
 from aw_transform import flood
 
 
-EXAMPLE_REGEX = r"activitywatch|algobit|defiarb|github.com"
+EXAMPLE_REGEX = r"komutracker|algobit|defiarb|github.com"
 OUTPUT_HTML = os.environ.get("OUTPUT_HTML", "").lower() == "true"
 
 

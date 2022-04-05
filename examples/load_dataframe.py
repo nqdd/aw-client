@@ -1,5 +1,5 @@
 """
-Load ActivityWatch data into a dataframe, and export as CSV.
+Load KomuTracker data into a dataframe, and export as CSV.
 """
 
 from datetime import datetime, timedelta, timezone

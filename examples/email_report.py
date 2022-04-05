@@ -58,14 +58,14 @@ def main(read_stdin=True) -> None:
     assert smtp_username, "Enviroment variable SMTP_USERNAME not set"
     assert smtp_password, "Enviroment variable SMTP_PASSWORD not set"
 
-    sender = Recipient("ActivityWatch (automated script)", "noreply@activitywatch.net")
+    sender = Recipient("KomuTracker (automated script)", "noreply@komutracker.net")
     receiver = Recipient("Erik Bjäreholt", "erik.bjareholt@gmail.com")
 
     if read_stdin:
         # Accepts input from stdin
         text = sys.stdin.read()
     else:
-        text = "Just a test. ActivityWatch stats will go here."
+        text = "Just a test. KomuTracker stats will go here."
 
     text = text.replace("\n\n", "<hr>")
     # text = text.replace("\n\n", "<br>")
