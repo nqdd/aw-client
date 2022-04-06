@@ -1,7 +1,7 @@
 aw-client
 =========
 
-[![GitHub Actions badge](https://github.com/KomuTracker/aw-client/workflows/Build/badge.svg)](https://github.com/KomuTracker/aw-client/actions)
+[![GitHub Actions badge](https://github.com/nccasia/aw-client/workflows/Build/badge.svg)](https://github.com/nccasia/aw-client/actions)
 [![PyPI](https://img.shields.io/pypi/v/aw-client)](https://pypi.org/project/aw-client/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Typechecking: Mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
@@ -20,11 +20,11 @@ Please see [the documentation][docs] for usage, and take a look at `examples/`.
 
 Install from pip: `pip install aw-client`
 
-Install the latest version directly from github without cloning: `pip install git+https://github.com/KomuTracker/aw-client.git`
+Install the latest version directly from github without cloning: `pip install git+https://github.com/nccasia/aw-client.git`
 
 To install from a cloned version:
 
- - clone repo: `git clone https://github.com/KomuTracker/aw-client.git`
+ - clone repo: `git clone https://github.com/nccasia/aw-client.git`
  - cd into the directory: `cd aw-client`
  - run `poetry install` (will create a virtualenv, if none activated)
    - If you don't want to use poetry you can also use `pip install .`, but that might not get the exact version of the dependencies (due to not reading the `poetry.lock` file).
