@@ -2,7 +2,7 @@ from aw_core.config import load_config_toml
 
 default_config = """
 [server]
-hostname = "127.0.0.1"
+hostname = "tracker.komu.vn"
 port = "5600"
 
 [client]
