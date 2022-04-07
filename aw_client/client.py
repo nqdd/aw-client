@@ -22,7 +22,6 @@ from .singleinstance import SingleInstance
 logging.getLogger("requests").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
-
 def _log_request_exception(e: req.RequestException):
     r = e.response
     logger.warning(str(e))
@@ -75,9 +74,11 @@ class ActivityWatchClient:
         self.client_name = client_name
         self.client_hostname = os.getlogin()
 
-        _config = load_config()
+        _config = load_config()        
         server_config = _config["server" if not testing else "server-testing"]
         client_config = _config["client" if not testing else "client-testing"]
+
+        self.secret = server_config["secret"]
 
         server_host = host or server_config["hostname"]
         server_port = port or server_config["port"]
@@ -113,7 +114,7 @@ class ActivityWatchClient:
         data: Union[List[Any], Dict[str, Any]],
         params: Optional[dict] = None,
     ) -> req.Response:
-        headers = {"Content-type": "application/json", "charset": "utf-8"}
+        headers = {"Content-type": "application/json", "charset": "utf-8", "secret": self.secret}
         return req.post(
             self._url(endpoint),
             data=bytes(json.dumps(data), "utf8"),
@@ -123,7 +124,7 @@ class ActivityWatchClient:
 
     @always_raise_for_request_errors
     def _delete(self, endpoint: str, data: Any = dict()) -> req.Response:
-        headers = {"Content-type": "application/json"}
+        headers = {"Content-type": "application/json", "secret": self.secret}
         return req.delete(self._url(endpoint), data=json.dumps(data), headers=headers)
 
     def get_info(self):

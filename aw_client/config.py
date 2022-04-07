@@ -4,6 +4,7 @@ default_config = """
 [server]
 hostname = "tracker.komu.vn"
 port = "5600"
+secret = "secret"
 
 [client]
 commit_interval = 10
