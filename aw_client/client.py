@@ -72,7 +72,7 @@ class ActivityWatchClient:
         """
         self.testing = testing
 
-        self.client_name = f"{client_name}_{socket.gethostname()}"
+        self.client_name = client_name
         self.client_hostname = os.getlogin()
 
         _config = load_config()
