@@ -101,6 +101,7 @@ class ActivityWatchClient:
         )
 
         user = self.auth()
+        hostname = ""
         if user is not None and user != {}:
             self.user_name = user['name']
             self.user_email = user['email']
