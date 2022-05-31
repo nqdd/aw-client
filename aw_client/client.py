@@ -17,11 +17,12 @@ from aw_core.dirs import get_data_dir
 from .config import load_config
 from .singleinstance import SingleInstance
 
+import time
+import base64
 
 # FIXME: This line is probably badly placed
 logging.getLogger("requests").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
-
 
 def _log_request_exception(e: req.RequestException):
     r = e.response
@@ -50,6 +51,20 @@ def always_raise_for_request_errors(f: Callable[..., req.Response]):
 
     return g
 
+def current_milli_time():
+    return round(time.time() * 1000)
+
+def base64_encode(message):
+    message_bytes = message.encode('ascii')
+    base64_bytes = base64.b64encode(message_bytes)
+    base64_message = base64_bytes.decode('ascii')
+    return base64_message
+    
+def base64_decode(base64_message):
+    base64_bytes = base64_message.encode('ascii')
+    message_bytes = base64.b64decode(base64_bytes)
+    message = message_bytes.decode('ascii')
+    return message
 
 class ActivityWatchClient:
     def __init__(
@@ -73,8 +88,11 @@ class ActivityWatchClient:
         self.testing = testing
 
         _config = load_config()
+
         server_config = _config["server" if not testing else "server-testing"]
         client_config = _config["client" if not testing else "client-testing"]
+
+        self.secret = server_config["secret"]
 
         server_host = host or server_config["hostname"]
         server_port = port or server_config["port"]
@@ -121,7 +139,7 @@ class ActivityWatchClient:
         data: Union[List[Any], Dict[str, Any]],
         params: Optional[dict] = None,
     ) -> req.Response:
-        headers = {"Content-type": "application/json", "charset": "utf-8"}
+        headers = {"Content-type": "application/json", "charset": "utf-8", "secret": base64_encode(f"{current_milli_time()}")}
         return req.post(
             self._url(endpoint),
             data=bytes(json.dumps(data), "utf8"),
@@ -131,7 +149,7 @@ class ActivityWatchClient:
 
     @always_raise_for_request_errors
     def _delete(self, endpoint: str, data: Any = dict()) -> req.Response:
-        headers = {"Content-type": "application/json"}
+        headers = {"Content-type": "application/json", "secret": base64_encode(f"{current_milli_time()}")}
         return req.delete(self._url(endpoint), data=json.dumps(data), headers=headers)
 
     def get_info(self):
