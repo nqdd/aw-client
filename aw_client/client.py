@@ -87,10 +87,8 @@ class ActivityWatchClient:
         """
         self.testing = testing
 
-        self.client_name = client_name
-        self.client_hostname = os.getlogin()
+        _config = load_config()
 
-        _config = load_config()        
         server_config = _config["server" if not testing else "server-testing"]
         client_config = _config["client" if not testing else "client-testing"]
 
@@ -102,6 +100,17 @@ class ActivityWatchClient:
             protocol=protocol, host=server_host, port=server_port
         )
 
+        user = self.auth()
+        if user is not None and user != {}:
+            self.user_name = user['name']
+            self.user_email = user['email']
+            hostname = self.user_email[:self.user_email.index("@")]
+        else:
+            self.user_name = ""
+            self.user_email = ""
+
+        self.client_name = client_name
+        self.client_hostname = hostname
         self.instance = SingleInstance(
             f"{self.client_name}-at-{server_host}-on-{server_port}"
         )
@@ -374,6 +383,10 @@ class ActivityWatchClient:
 
         # Throw away old thread object, create new one since same thread cannot be started twice
         self.request_queue = RequestQueue(self)
+
+    def auth(self):
+        response = self._get(f"auth/{socket.gethostname()}")
+        return response.json()
 
 
 QueuedRequest = namedtuple("QueuedRequest", ["endpoint", "data"])
