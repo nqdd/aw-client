@@ -67,6 +67,8 @@ def base64_decode(base64_message):
     return message
 
 class ActivityWatchClient:
+    token = None
+
     def __init__(
         self,
         client_name: str = "unknown",
@@ -141,6 +143,8 @@ class ActivityWatchClient:
         params: Optional[dict] = None,
     ) -> req.Response:
         headers = {"Content-type": "application/json", "charset": "utf-8", "secret": base64_encode(f"{current_milli_time()}")}
+        if self.token is not None:
+            headers['Authentication'] = self.token
         return req.post(
             self._url(endpoint),
             data=bytes(json.dumps(data), "utf8"),
@@ -387,6 +391,15 @@ class ActivityWatchClient:
 
     def auth(self):
         response = self._get(f"auth/{socket.gethostname()}")
+        return response.json()
+
+    def check_auth_device(self) -> str:
+        response = self._post(f"auth/{socket.gethostname()}", None)
+        return response.json()
+    
+    def check_valid_token(self, localToken) -> bool:
+        self.token = localToken
+        response = self._post(f"validate/{localToken}", None)
         return response.json()
 
 
