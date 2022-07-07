@@ -67,7 +67,6 @@ def base64_decode(base64_message):
     return message
 
 class ActivityWatchClient:
-    token = None
 
     def __init__(
         self,
@@ -76,6 +75,7 @@ class ActivityWatchClient:
         host=None,
         port=None,
         protocol="http",
+        token=None,
     ) -> None:
         """
         A handy wrapper around the aw-server REST API. The recommended way of interacting with the server.
@@ -88,6 +88,7 @@ class ActivityWatchClient:
             :lines: 7-
         """
         self.testing = testing
+        self.token = token
 
         _config = load_config()
 
@@ -133,7 +134,10 @@ class ActivityWatchClient:
 
     @always_raise_for_request_errors
     def _get(self, endpoint: str, params: Optional[dict] = None) -> req.Response:
-        return req.get(self._url(endpoint), params=params)
+        if self.token is not None:
+            headers = {}
+            headers['Authorization'] = 'Bearer ' + self.token
+        return req.get(self._url(endpoint), params=params, headers=headers)
 
     @always_raise_for_request_errors
     def _post(
@@ -144,7 +148,7 @@ class ActivityWatchClient:
     ) -> req.Response:
         headers = {"Content-type": "application/json", "charset": "utf-8", "secret": base64_encode(f"{current_milli_time()}")}
         if self.token is not None:
-            headers['Authentication'] = self.token
+            headers['Authorization'] = 'Bearer ' + self.token
         return req.post(
             self._url(endpoint),
             data=bytes(json.dumps(data), "utf8"),
@@ -390,17 +394,31 @@ class ActivityWatchClient:
         self.request_queue = RequestQueue(self)
 
     def auth(self):
-        response = self._get(f"auth/{socket.gethostname()}")
-        return response.json()
+        try:
+            response = self._get(f"auth/me", None)
+            user = response.json()
+            self.user_name = user['name']
+            self.user_email = user['email']
+            return user
+        except:
+            return None
 
-    def check_auth_device(self) -> str:
-        response = self._post(f"auth/{socket.gethostname()}", None)
-        return response.json()
+    def get_device_token(self) -> str:
+        try:
+            response = self._post(f"auth", {
+                'device_id': socket.gethostname()
+            })
+            return response.json()
+        except:
+            return None
     
     def check_valid_token(self, localToken) -> bool:
-        self.token = localToken
-        response = self._post(f"validate/{localToken}", None)
-        return response.json()
+        try:
+            self.token = localToken
+            self._get(f"auth/me", None)
+            return True
+        except:
+            return False
 
 
 QueuedRequest = namedtuple("QueuedRequest", ["endpoint", "data"])
