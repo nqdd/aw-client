@@ -7,6 +7,7 @@ import functools
 from datetime import datetime
 from collections import namedtuple
 from typing import Optional, List, Any, Union, Dict, Callable, Tuple
+from aw_client.localToken import LocalToken
 
 import requests as req
 import persistqueue
@@ -67,7 +68,8 @@ def base64_decode(base64_message):
     return message
 
 class ActivityWatchClient:
-
+    is_authenticated = False
+    
     def __init__(
         self,
         client_name: str = "unknown",
@@ -75,7 +77,6 @@ class ActivityWatchClient:
         host=None,
         port=None,
         protocol="http",
-        token=None,
     ) -> None:
         """
         A handy wrapper around the aw-server REST API. The recommended way of interacting with the server.
@@ -88,7 +89,10 @@ class ActivityWatchClient:
             :lines: 7-
         """
         self.testing = testing
-        self.token = token
+        
+        token = LocalToken()
+        self.token = token.token
+
 
         _config = load_config()
 
@@ -103,27 +107,23 @@ class ActivityWatchClient:
             protocol=protocol, host=server_host, port=server_port
         )
 
-        user = self.auth()
-        hostname = ""
-        if user is not None and user != {}:
-            self.user_name = user['name']
-            self.user_email = user['email']
+        if self.token is not None:
+            self.auth()
+            
+        if self.is_authenticated:
             hostname = self.user_email[:self.user_email.index("@")]
-        else:
-            self.user_name = ""
-            self.user_email = ""
 
-        self.client_name = client_name
-        self.client_hostname = hostname
-        self.instance = SingleInstance(
-            f"{self.client_name}-at-{server_host}-on-{server_port}"
-        )
+            self.client_name = client_name
+            self.client_hostname = hostname
+            self.instance = SingleInstance(
+                f"{self.client_name}-at-{server_host}-on-{server_port}"
+            )
 
-        self.commit_interval = client_config["commit_interval"]
+            self.commit_interval = client_config["commit_interval"]
 
-        self.request_queue = RequestQueue(self)
-        # Dict of each last heartbeat in each bucket
-        self.last_heartbeat = {}  # type: Dict[str, Event]
+            self.request_queue = RequestQueue(self)
+            # Dict of each last heartbeat in each bucket
+            self.last_heartbeat = {}  # type: Dict[str, Event]
 
     #
     #   Get/Post base requests
@@ -395,30 +395,27 @@ class ActivityWatchClient:
 
     def auth(self):
         try:
+            logger.info("start auth")
             response = self._get(f"auth/me", None)
             user = response.json()
             self.user_name = user['name']
             self.user_email = user['email']
+            self.is_authenticated = True
             return user
         except:
+            logger.error("auth failed")
             return None
 
     def get_device_token(self) -> str:
         try:
+            logger.info("get token")
             response = self._post(f"auth", {
                 'device_id': socket.gethostname()
             })
             return response.json()
         except:
+            logger.error("get token failed")
             return None
-    
-    def check_valid_token(self, localToken) -> bool:
-        try:
-            self.token = localToken
-            self._get(f"auth/me", None)
-            return True
-        except:
-            return False
 
 
 QueuedRequest = namedtuple("QueuedRequest", ["endpoint", "data"])
