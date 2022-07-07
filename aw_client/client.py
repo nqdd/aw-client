@@ -69,7 +69,7 @@ def base64_decode(base64_message):
 
 class ActivityWatchClient:
     is_authenticated = False
-    
+    localToken = LocalToken()
     def __init__(
         self,
         client_name: str = "unknown",
@@ -90,10 +90,6 @@ class ActivityWatchClient:
         """
         self.testing = testing
         
-        token = LocalToken()
-        self.token = token.token
-
-
         _config = load_config()
 
         server_config = _config["server" if not testing else "server-testing"]
@@ -107,7 +103,7 @@ class ActivityWatchClient:
             protocol=protocol, host=server_host, port=server_port
         )
 
-        if self.token is not None:
+        if self.localToken.get() is not None:
             self.auth()
             
         if self.is_authenticated:
@@ -134,9 +130,9 @@ class ActivityWatchClient:
 
     @always_raise_for_request_errors
     def _get(self, endpoint: str, params: Optional[dict] = None) -> req.Response:
-        if self.token is not None:
+        if self.localToken.get() is not None:
             headers = {}
-            headers['Authorization'] = 'Bearer ' + self.token
+            headers['Authorization'] = 'Bearer ' + self.localToken.get()
         return req.get(self._url(endpoint), params=params, headers=headers)
 
     @always_raise_for_request_errors
@@ -147,8 +143,8 @@ class ActivityWatchClient:
         params: Optional[dict] = None,
     ) -> req.Response:
         headers = {"Content-type": "application/json", "charset": "utf-8", "secret": base64_encode(f"{current_milli_time()}")}
-        if self.token is not None:
-            headers['Authorization'] = 'Bearer ' + self.token
+        if self.localToken.get() is not None:
+            headers['Authorization'] = 'Bearer ' + self.localToken.get()
         return req.post(
             self._url(endpoint),
             data=bytes(json.dumps(data), "utf8"),
@@ -404,14 +400,17 @@ class ActivityWatchClient:
             return user
         except:
             logger.error("auth failed")
+            self.is_authenticated = False
             return None
 
     def get_device_token(self) -> str:
         try:
-            logger.info("get token")
+            logger.info("get token from server")
             response = self._post(f"auth", {
                 'device_id': socket.gethostname()
             })
+            token = response.json()
+            self.localToken.set(token)
             return response.json()
         except:
             logger.error("get token failed")

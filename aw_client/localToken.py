@@ -2,17 +2,16 @@ import os
 
 class LocalToken:
     authFile = 'auth.tracker'
-    token = None
 
-    def __init__(self) -> None:
+    def get(self) -> str:
         try:
             tokenFile = open(self.authFile, "r")
             token = tokenFile.read()
             tokenFile.close()
-            self.token = token
+            return token
         except:
-            self.token = None
-    
+            return None
+        
     def set(self, token) -> None:
         try:
             tokenFile = open(self.authFile, "w+")
