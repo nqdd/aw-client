@@ -105,8 +105,10 @@ class ActivityWatchClient:
 
         if self.localToken.get() is not None:
             self.auth()
-            
+        
+        
         if self.is_authenticated:
+            logger.info("logged in")
             hostname = self.user_email[:self.user_email.index("@")]
 
             self.client_name = client_name
@@ -130,8 +132,9 @@ class ActivityWatchClient:
 
     @always_raise_for_request_errors
     def _get(self, endpoint: str, params: Optional[dict] = None) -> req.Response:
+        headers = {}
+        headers['Device-Id'] = socket.gethostname()
         if self.localToken.get() is not None:
-            headers = {}
             headers['Authorization'] = 'Bearer ' + self.localToken.get()
         return req.get(self._url(endpoint), params=params, headers=headers)
 
@@ -142,7 +145,8 @@ class ActivityWatchClient:
         data: Union[List[Any], Dict[str, Any]],
         params: Optional[dict] = None,
     ) -> req.Response:
-        headers = {"Content-type": "application/json", "charset": "utf-8", "secret": base64_encode(f"{current_milli_time()}")}
+        headers = {"Content-type": "application/json", "charset": "utf-8"}
+        headers['Device-Id'] = socket.gethostname()
         if self.localToken.get() is not None:
             headers['Authorization'] = 'Bearer ' + self.localToken.get()
         return req.post(
