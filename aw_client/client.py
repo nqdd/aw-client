@@ -68,7 +68,7 @@ def base64_decode(base64_message):
     return message
 
 class ActivityWatchClient:
-    is_authenticated = False
+    auth_status = None
     localToken = LocalToken()
     def __init__(
         self,
@@ -107,7 +107,7 @@ class ActivityWatchClient:
             self.auth()
         
         
-        if self.is_authenticated:
+        if self.auth_status == "Success":
             logger.info("logged in")
             hostname = self.user_email[:self.user_email.index("@")]
 
@@ -395,16 +395,23 @@ class ActivityWatchClient:
 
     def auth(self):
         try:
-            logger.info("start auth")
             response = self._get(f"auth/me", None)
-            user = response.json()
-            self.user_name = user['name']
-            self.user_email = user['email']
-            self.is_authenticated = True
-            return user
-        except:
-            logger.error("auth failed")
-            self.is_authenticated = False
+            if response.status_code == 200:
+                user = response.json()
+                self.user_name = user['name']
+                self.user_email = user['email']
+                self.auth_status = "Success"
+                return user
+
+        except req.exceptions.HTTPError as err:
+            status_code = err.response.status_code
+            if status_code == 401:
+                logger.info(status_code)    
+                self.auth_status = "Failed"
+            return None
+        except Exception as ex:
+            logger.info(ex)
+            self.auth_status = "Unknown"
             return None
 
     def get_device_token(self) -> str:
@@ -511,7 +518,7 @@ class RequestQueue(threading.Thread):
     def _dispatch_request(self) -> None:
         request = self._get_next()
         if not request:
-            self.wait(0.1)  # seconds to wait before re-polling the empty queue
+            self.wait(1)  # seconds to wait before re-polling the empty queue
             return
 
         try:
