@@ -133,7 +133,7 @@ class ActivityWatchClient:
     @always_raise_for_request_errors
     def _get(self, endpoint: str, params: Optional[dict] = None) -> req.Response:
         headers = {}
-        headers['Device-Id'] = socket.gethostname()
+        headers['Device-Id'] = f"{os.getlogin()}_{socket.gethostname()}"
         if self.localToken.get() is not None:
             headers['Authorization'] = 'Bearer ' + self.localToken.get()
         return req.get(self._url(endpoint), params=params, headers=headers)
@@ -146,7 +146,7 @@ class ActivityWatchClient:
         params: Optional[dict] = None,
     ) -> req.Response:
         headers = {"Content-type": "application/json", "charset": "utf-8"}
-        headers['Device-Id'] = socket.gethostname()
+        headers['Device-Id'] = f"{os.getlogin()}_{socket.gethostname()}"
         if self.localToken.get() is not None:
             headers['Authorization'] = 'Bearer ' + self.localToken.get()
         return req.post(
@@ -403,12 +403,6 @@ class ActivityWatchClient:
                 self.auth_status = "Success"
                 return user
 
-        except req.exceptions.HTTPError as err:
-            status_code = err.response.status_code
-            if status_code == 401:
-                logger.info(status_code)    
-                self.auth_status = "Failed"
-            return None
         except Exception as ex:
             logger.info(ex)
             self.auth_status = "Unknown"
@@ -418,7 +412,7 @@ class ActivityWatchClient:
         try:
             logger.info("get token from server")
             response = self._post(f"auth", {
-                'device_id': socket.gethostname()
+                'device_id': f"{os.getlogin()}_{socket.gethostname()}"
             })
             token = response.json()
             self.localToken.set(token)
