@@ -21,6 +21,10 @@ from .singleinstance import SingleInstance
 import time
 import base64
 
+from PyQt5.QtWidgets import (
+    QAction
+)
+
 # FIXME: This line is probably badly placed
 logging.getLogger("requests").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -408,7 +412,7 @@ class ActivityWatchClient:
             self.auth_status = "Unknown"
             return None
 
-    def get_device_token(self) -> str:
+    def get_device_token(self, mainAction: QAction) -> str:
         try:
             logger.info("get token from server")
             response = self._post(f"auth", {
@@ -419,6 +423,8 @@ class ActivityWatchClient:
             return response.json()
         except:
             logger.error("get token failed")
+            mainAction.setText('Login')
+            mainAction.isEnabled(True)
             return None
 
 
