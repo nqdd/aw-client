@@ -1,7 +1,13 @@
 import os
+import logging
+import aw_core
+
+# FIXME: This line is probably badly placed
+logging.getLogger("requests").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
 
 class LocalToken:
-    authFile = 'auth.tracker'
+    authFile = os.path.join(aw_core.dirs.get_cache_dir("auth"), 'auth.tracker')
 
     def get(self) -> str:
         try:
@@ -10,6 +16,7 @@ class LocalToken:
             tokenFile.close()
             return token
         except:
+            logger.error('cannot open auth.tracker')
             return None
         
     def set(self, token) -> None:
@@ -17,7 +24,8 @@ class LocalToken:
             tokenFile = open(self.authFile, "w+")
             tokenFile.write(token)
             tokenFile.close()
-        except:
+        except Exception as e:
+            logger.error(f'cannot write to auth.tracker: {e}')
             pass
 
     def delete(self) -> None:

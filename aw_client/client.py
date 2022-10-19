@@ -420,11 +420,14 @@ class ActivityWatchClient:
             })
             token = response.json()
             self.localToken.set(token)
+            if token == None:
+                mainAction.setText('Login')
+                mainAction.setEnabled(True)
             return response.json()
         except:
             logger.error("get token failed")
             mainAction.setText('Login')
-            mainAction.isEnabled(True)
+            mainAction.setEnabled(True)
             return None
 
 
