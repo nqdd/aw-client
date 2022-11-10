@@ -7,6 +7,7 @@ import functools
 from datetime import datetime
 from collections import namedtuple
 from typing import Optional, List, Any, Union, Dict, Callable, Tuple
+from aw_client.localToken import LocalToken
 
 import requests as req
 import persistqueue
@@ -19,6 +20,10 @@ from .singleinstance import SingleInstance
 
 import time
 import base64
+
+from PyQt5.QtWidgets import (
+    QAction
+)
 
 # FIXME: This line is probably badly placed
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -67,6 +72,8 @@ def base64_decode(base64_message):
     return message
 
 class ActivityWatchClient:
+    auth_status = None
+    localToken = LocalToken()
     def __init__(
         self,
         client_name: str = "unknown",
@@ -86,7 +93,7 @@ class ActivityWatchClient:
             :lines: 7-
         """
         self.testing = testing
-
+        
         _config = load_config()
 
         server_config = _config["server" if not testing else "server-testing"]
@@ -100,27 +107,25 @@ class ActivityWatchClient:
             protocol=protocol, host=server_host, port=server_port
         )
 
-        user = self.auth()
-        hostname = ""
-        if user is not None and user != {}:
-            self.user_name = user['name']
-            self.user_email = user['email']
+        if self.localToken.get() is not None:
+            self.auth()
+        
+        
+        if self.auth_status == "Success":
+            logger.info("logged in")
             hostname = self.user_email[:self.user_email.index("@")]
-        else:
-            self.user_name = ""
-            self.user_email = ""
 
-        self.client_name = client_name
-        self.client_hostname = hostname
-        self.instance = SingleInstance(
-            f"{self.client_name}-at-{server_host}-on-{server_port}"
-        )
+            self.client_name = client_name
+            self.client_hostname = hostname
+            self.instance = SingleInstance(
+                f"{self.client_name}-at-{server_host}-on-{server_port}"
+            )
 
-        self.commit_interval = client_config["commit_interval"]
+            self.commit_interval = client_config["commit_interval"]
 
-        self.request_queue = RequestQueue(self)
-        # Dict of each last heartbeat in each bucket
-        self.last_heartbeat = {}  # type: Dict[str, Event]
+            self.request_queue = RequestQueue(self)
+            # Dict of each last heartbeat in each bucket
+            self.last_heartbeat = {}  # type: Dict[str, Event]
 
     #
     #   Get/Post base requests
@@ -131,7 +136,11 @@ class ActivityWatchClient:
 
     @always_raise_for_request_errors
     def _get(self, endpoint: str, params: Optional[dict] = None) -> req.Response:
-        return req.get(self._url(endpoint), params=params)
+        headers = {}
+        headers['Device-Id'] = f"{os.getlogin()}_{socket.gethostname()}"
+        if self.localToken.get() is not None:
+            headers['Authorization'] = 'Bearer ' + self.localToken.get()
+        return req.get(self._url(endpoint), params=params, headers=headers)
 
     @always_raise_for_request_errors
     def _post(
@@ -140,7 +149,10 @@ class ActivityWatchClient:
         data: Union[List[Any], Dict[str, Any]],
         params: Optional[dict] = None,
     ) -> req.Response:
-        headers = {"Content-type": "application/json", "charset": "utf-8", "secret": base64_encode(f"{current_milli_time()}")}
+        headers = {"Content-type": "application/json", "charset": "utf-8"}
+        headers['Device-Id'] = f"{os.getlogin()}_{socket.gethostname()}"
+        if self.localToken.get() is not None:
+            headers['Authorization'] = 'Bearer ' + self.localToken.get()
         return req.post(
             self._url(endpoint),
             data=bytes(json.dumps(data), "utf8"),
@@ -386,8 +398,37 @@ class ActivityWatchClient:
         self.request_queue = RequestQueue(self)
 
     def auth(self):
-        response = self._get(f"auth/{socket.gethostname()}")
-        return response.json()
+        try:
+            response = self._get(f"auth/me", None)
+            if response.status_code == 200:
+                user = response.json()
+                self.user_name = user['name']
+                self.user_email = user['email']
+                self.auth_status = "Success"
+                return user
+
+        except Exception as ex:
+            logger.info(ex)
+            self.auth_status = "Unknown"
+            return None
+
+    def get_device_token(self, mainAction: QAction) -> str:
+        try:
+            logger.info("get token from server")
+            response = self._post(f"auth", {
+                'device_id': f"{os.getlogin()}_{socket.gethostname()}"
+            })
+            token = response.json()
+            self.localToken.set(token)
+            if token == None:
+                mainAction.setText('Login')
+                mainAction.setEnabled(True)
+            return response.json()
+        except:
+            logger.error("get token failed")
+            mainAction.setText('Login')
+            mainAction.setEnabled(True)
+            return None
 
 
 QueuedRequest = namedtuple("QueuedRequest", ["endpoint", "data"])
@@ -480,7 +521,7 @@ class RequestQueue(threading.Thread):
     def _dispatch_request(self) -> None:
         request = self._get_next()
         if not request:
-            self.wait(0.1)  # seconds to wait before re-polling the empty queue
+            self.wait(1)  # seconds to wait before re-polling the empty queue
             return
 
         try:
