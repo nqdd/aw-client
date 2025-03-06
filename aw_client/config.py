@@ -2,7 +2,7 @@ from aw_core.config import load_config_toml
 
 default_config = """
 [server]
-hostname = "tracker.komu.vn"
+hostname = "tracker.nccsoft.vn"
 port = "5600"
 secret = "secret"
 
