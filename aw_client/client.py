@@ -412,7 +412,7 @@ class ActivityWatchClient:
             self.auth_status = "Unknown"
             return None
 
-    def get_device_token(self, mainAction: QAction) -> str:
+    def get_device_token(self, mainAction: QAction, logoutAction: QAction) -> str:
         try:
             logger.info("get token from server")
             response = self._post(f"auth", {
@@ -423,11 +423,31 @@ class ActivityWatchClient:
             if token == None:
                 mainAction.setText('Login')
                 mainAction.setEnabled(True)
+                logoutAction.setEnabled(False)
             return response.json()
         except:
             logger.error("get token failed")
             mainAction.setText('Login')
             mainAction.setEnabled(True)
+            logoutAction.setEnabled(False)
+            return None
+    
+    def delete_device_token(self, mainAction: QAction, logoutAction: QAction) -> str:
+        try:
+            logger.info("delete token from server")
+            response = self._delete(f"auth", {
+                'device_id': f"{os.getlogin()}_{socket.gethostname()}"
+            })
+            self.localToken.delete()
+            mainAction.setText('Login')
+            mainAction.setEnabled(True)
+            logoutAction.setEnabled(False)
+            return response.json()
+        except:
+            logger.error("delete token failed")
+            # mainAction.setText('Login')
+            # mainAction.setEnabled(True)
+            # logoutAction.setEnabled(False)
             return None
 
 
