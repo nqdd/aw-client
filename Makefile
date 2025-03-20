@@ -1,7 +1,7 @@
 .PHONY: build test typecheck clean
 
 build:
-	poetry install
+	poetry install -vvv
 
 test:
 	python -c "import aw_client"
